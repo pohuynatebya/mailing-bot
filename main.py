@@ -1,0 +1,60 @@
+import logging
+from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+API_TOKEN = '5802664997:AAH4VxEHybKauPOM00JPpDTP1sx6xl8UPXg'  # Замените на свой токен
+
+# Инициализация бота и диспетчера
+bot = Bot(token=API_TOKEN)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+
+# Включаем логирование, чтобы видеть процесс работы бота
+logging.basicConfig(level=logging.INFO)
+
+
+# Обработка команды /start
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    await message.reply("Привет! Я бот для рассылки сообщений с фотографиями.")
+
+
+# Обработка сообщений от администратора с фотографией, текстом и ссылкой
+@dp.message_handler(content_types=[types.ContentType.PHOTO])
+async def process_admin_message(message: types.Message):
+    # Проверяем, что пользователь является администратором
+    if message.from_user.id == 79616282:  # Замените YOUR_ADMIN_ID на свой ID
+        caption = message.caption if message.caption else ""
+        photo_file_id = message.photo[-1].file_id
+
+        # Разбиваем сообщение на текст и ссылку
+        parts = caption.split("|")
+        if len(parts) == 2:
+            button_text = parts[0].strip()
+            button_url = parts[1].strip()
+
+            # Создаем кнопку с текстом и ссылкой
+            button = types.InlineKeyboardButton(button_text, url=button_url)
+            keyboard = types.InlineKeyboardMarkup().add(button)
+
+            # Получаем список всех подписчиков бота
+            subscribers = await bot.get_chat_members(chat_id=message.chat.id)
+            for subscriber in subscribers:
+                # Отправляем фотографию с подписью и кнопкой каждому подписчику
+                await bot.send_photo(
+                    subscriber.user.id,
+                    photo=photo_file_id,
+                    caption=caption,
+                    reply_markup=keyboard
+                )
+        else:
+            await message.reply("Некорректный формат сообщения. Пожалуйста, используйте формат: Текст | Ссылка")
+    else:
+        await message.reply("Вы не являетесь администратором.")
+
+
+# Запуск бота
+if __name__ == '__main__':
+    from aiogram import executor
+    print("start")
+    executor.start_polling(dp, skip_updates=True)
