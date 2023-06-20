@@ -4,26 +4,19 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 API_TOKEN = '5802664997:AAH4VxEHybKauPOM00JPpDTP1sx6xl8UPXg'  # Замените на свой токен
 
-# Инициализация бота и диспетчера
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
-# Включаем логирование, чтобы видеть процесс работы бота
 logging.basicConfig(level=logging.INFO)
 
-
-# Обработка команды /start
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     await message.reply("Привет! Я бот для рассылки сообщений с фотографиями.")
 
-
-# Обработка сообщений от администратора с фотографией, текстом и ссылкой
 @dp.message_handler(content_types=[types.ContentType.PHOTO])
 async def process_admin_message(message: types.Message):
-    # Проверяем, что пользователь является администратором
-    if message.from_user.id == 79616282:  # Замените YOUR_ADMIN_ID на свой ID
+    if message.from_user.id == 79616282:  
         caption = message.caption if message.caption else ""
         photo_file_id = message.photo[-1].file_id
 
@@ -53,7 +46,6 @@ async def process_admin_message(message: types.Message):
         await message.reply("Вы не являетесь администратором.")
 
 
-# Запуск бота
 if __name__ == '__main__':
     from aiogram import executor
     print("start")
